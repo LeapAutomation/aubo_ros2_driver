@@ -21,6 +21,7 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include <std_srvs/srv/set_bool.hpp>
 
 #include <aubo_dashboard_msgs/msg/robot_mode.h>
 
@@ -120,6 +121,15 @@ private:
     RobotModeType robot_mode_ = RobotModeType::NoController;
     SafetyModeType safety_mode_ = SafetyModeType::Normal;
     RuntimeState runtime_state_ = RuntimeState::Stopped;
+
+
+    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr enable_robot_service_;
+
+    void enableRobotCb(
+        const std::shared_ptr<std_srvs::srv::SetBool::Request>& req,
+        const std::shared_ptr<std_srvs::srv::SetBool::Response>& res
+    );
+    
 };
 } // namespace aubo_driver
 

@@ -19,9 +19,13 @@ int main(int argc, char **argv)
 
     // control loop thread
     std::thread control_loop([controller_manager]() {
-        if (!realtime_tools::configure_sched_fifo(50)) {
+        if (!realtime_tools::configure_sched_fifo(99)) {
             RCLCPP_WARN(controller_manager->get_logger(),
                         "Could not enable FIFO RT scheduling policy");
+        }
+        else{
+             RCLCPP_WARN(controller_manager->get_logger(),
+                        "Successfully set FIFO RT scheduling policy");
         }
 
         // for calculating sleep time

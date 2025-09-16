@@ -25,7 +25,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "aubo_type",
-            default_value="aubo_i5",
+            default_value="aubo_iS10",
             description='Description with aubo robot type.',
         )
     )
@@ -77,7 +77,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip",
-            default_value="None",
+            default_value="192.168.10.2",
             description="IP of robot computer. \
             Used only if 'use_fake_hardware' parameter is false.",
         )
@@ -85,7 +85,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "aubo_port",
-            default_value="80",
+            default_value="3000",
             description="Port at which RWS can be found. \
             Used only if 'use_fake_hardware' parameter is false.",
         )
@@ -165,7 +165,7 @@ def generate_launch_description():
     aubo_control_node = Node(
         package="aubo_ros2_driver",
         executable="aubo_ros2_control_node",
-        parameters=[robot_description, robot_controllers],
+        parameters=[robot_controllers],
         output="both",
     )
     robot_state_publisher_node = Node(
@@ -188,16 +188,14 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "joint_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
+            "joint_state_broadcaster"
         ],
     )
 
     initial_joint_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=[initial_joint_controller, "-c", "/controller_manager"],
+        arguments=[initial_joint_controller, "--param-file", robot_controllers],
     )
 
     nodes_to_start = [

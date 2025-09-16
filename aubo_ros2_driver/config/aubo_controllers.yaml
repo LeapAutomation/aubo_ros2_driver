@@ -6,13 +6,13 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     joint_trajectory_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
 
     forward_command_controller_position:
       type: forward_command_controller/ForwardCommandController
 
 joint_trajectory_controller:
   ros__parameters:
+    type: joint_trajectory_controller/JointTrajectoryController
     joints:
       - shoulder_joint
       - upperArm_joint
@@ -34,6 +34,7 @@ joint_trajectory_controller:
 
 forward_command_controller_position:
   ros__parameters:
+    type: forward_command_controller/ForwardCommandController
     joints:
       - shoulder_joint
       - upperArm_joint
