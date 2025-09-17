@@ -134,17 +134,19 @@ bool AuboHardwareInterface::enableRobot(bool enable)
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
-                return startServoMode() == 0;
+                if (startServoMode() == 0)
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    return true;
+                }
+                return false;
             }
             else
             {
                 return false;
             }
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
     else
     {
