@@ -1,15 +1,16 @@
 #include "aubo_hardware_interface.h"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include <aubo/type_def.h>
 #include <chrono>
 #include <ctime>
 #include <pluginlib/class_list_macros.hpp>
+#include <stdexcept>
 #include <thread>
 namespace aubo_driver
 {
 
 AuboHardwareInterface::~AuboHardwareInterface() { stopServoMode(); }
+
 bool AuboHardwareInterface::OnActive()
 {
     const std::string robot_ip_ = info_.hardware_parameters["robot_ip"];
@@ -49,7 +50,8 @@ bool AuboHardwareInterface::OnActive()
         ->getRobotConfig()
         ->setHardwareCustomParameters("[joint_func] \n vff_enable = false\n");
 
-    std::cout << "vff_enable = false" << std::endl;
+    // disable internal collision check
+    rpc_client_->getRobotInterface(robot_name_)->getRobotConfig()->setCollisionLevel(0);
 
     // 设置rtde输入
     setInput(rtde_client_);
@@ -57,7 +59,11 @@ bool AuboHardwareInterface::OnActive()
     // 配置输出
     configSubscribe(rtde_client_);
 
-    startServoMode();
+    if (!enableRobot(true))
+    {
+        throw std::runtime_error("Could not enable robot");
+    }
+    RCLCPP_INFO(get_logger(), "Enabled robot successfully");
 
     enable_robot_service_ = get_node()->create_service<std_srvs::srv::SetBool>(
         "/aubo_enable_robot",
@@ -73,8 +79,42 @@ void AuboHardwareInterface::enableRobotCb(
     const std::shared_ptr<std_srvs::srv::SetBool::Response> &res
 )
 {
-    if (req->data)
+    res->success = enableRobot(req->data);
+}
+
+AuboHardwareInterface::CallbackReturn AuboHardwareInterface::on_shutdown(const rclcpp_lifecycle::State &previous_state)
+{
+    RCLCPP_INFO(get_logger(), "Shutting down robot.");
+    if (!rpc_client_->getRobotInterface(robot_name_)->getRobotState()->isPowerOn())
     {
+        RCLCPP_WARN(get_logger(), "Robot already disabled. Returning");
+        return CallbackReturn::SUCCESS;
+    }
+    if (stopServoMode() == 0 && rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->poweroff() == 0)
+    {
+        return CallbackReturn::SUCCESS;
+    }
+    else
+    {
+        std::cout << "could not stop servo mode" << std::endl;
+        return CallbackReturn::FAILURE;
+    }
+}
+
+bool AuboHardwareInterface::enableRobot(bool enable)
+{
+    // todo:
+    // restartInterfaceBoard()  (robot_manage)
+    // setUnlockProtectiveStop()  (robot_manage)
+
+    if (enable)
+    {
+        if (rpc_client_->getRobotInterface(robot_name_)->getRobotState()->isPowerOn())
+        {
+            RCLCPP_WARN(get_logger(), "Robot already enabled. Returning");
+            return true;
+        }
+
         if (!rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->poweron())
         {
             // while (!rpc_client_->getRobotInterface(robot_name_)->getRobotState()->isPowerOn())
@@ -94,21 +134,34 @@ void AuboHardwareInterface::enableRobotCb(
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
-                res->success = true;
+                return startServoMode() == 0;
             }
             else
             {
-                res->success = false;
+                return false;
             }
         }
         else
         {
-            res->success = false;
+            return false;
         }
     }
     else
     {
-        res->success = rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->poweroff() == 0;
+        if (!rpc_client_->getRobotInterface(robot_name_)->getRobotState()->isPowerOn() || !isServoModeStart())
+        {
+            RCLCPP_WARN(get_logger(), "Robot already disabled. Returning");
+            return true;
+        }
+        if (stopServoMode() == 0)
+        {
+            return true;
+        }
+        else
+        {
+            std::cout << "could not stop servo mode" << std::endl;
+            return false;
+        }
     }
 }
 
@@ -171,6 +224,7 @@ hardware_interface::CallbackReturn AuboHardwareInterface::on_init(const hardware
 hardware_interface::CallbackReturn AuboHardwareInterface::on_activate(const rclcpp_lifecycle::State &previous_state)
 {
     RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Starting ...please wait...");
+
     OnActive();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     readActualQ();
