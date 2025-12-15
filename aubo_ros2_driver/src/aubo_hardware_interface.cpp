@@ -279,7 +279,7 @@ bool AuboHardwareInterface::enableRobot(bool enable, double time_out_s)
         if (robot_mode_ == RobotModeType::Booting)
         {
             RCLCPP_DEBUG(rclcpp::get_logger("AuboHardwareInterface"), "Waiting for robot to power on...");
-            auto start_time = std::chrono::steady_clock::now();
+
             if (!waitForRobotModeChangeFrom(RobotModeType::Booting, time_out_s))
             {
                 return false;
@@ -288,7 +288,7 @@ bool AuboHardwareInterface::enableRobot(bool enable, double time_out_s)
         if (robot_mode_ == RobotModeType::PowerOn)
         {
             RCLCPP_DEBUG(rclcpp::get_logger("AuboHardwareInterface"), "Waiting for robot to read initial state");
-            auto start_time = std::chrono::steady_clock::now();
+
             if (!waitForRobotModeChangeTo(RobotModeType::Idle, time_out_s))
             {
                 return false;
@@ -327,7 +327,7 @@ bool AuboHardwareInterface::enableRobot(bool enable, double time_out_s)
         {
             auto current_mode = robot_mode_;
             RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Disabling robot...");
-            if (rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->	poweroff() != 0)
+            if (rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->poweroff() != 0)
             {
                 RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Could not shutdown the robot");
                 return false;
@@ -341,7 +341,7 @@ bool AuboHardwareInterface::enableRobot(bool enable, double time_out_s)
         if (robot_mode_ == RobotModeType::PowerOffing)
         {
             RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Waiting for robot to shutdown");
-            auto start_time = std::chrono::steady_clock::now();
+
             if (!waitForRobotModeChangeTo(RobotModeType::PowerOff, time_out_s))
             {
                 return false;
@@ -365,7 +365,7 @@ bool AuboHardwareInterface::resetErrors(double time_out_s)
         }
         // wait for robot to change mode
         auto start_time = std::chrono::steady_clock::now();
-        while (safety_mode_ != current_mode)
+        while (safety_mode_ == current_mode)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             if (std::chrono::steady_clock::now() - start_time > std::chrono::duration<double>(time_out_s))
