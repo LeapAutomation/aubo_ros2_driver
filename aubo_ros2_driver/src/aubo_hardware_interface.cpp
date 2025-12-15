@@ -511,7 +511,7 @@ void AuboHardwareInterface::configSubscribe(RtdeClientPtr cli)
     });
 }
 
-bool AuboHardwareInterface::waitForRobotModeChangeTo(RobotModeType target_mode, double time_out_s = 1.0)
+bool AuboHardwareInterface::waitForRobotModeChangeTo(RobotModeType target_mode, double time_out_s)
 {
     auto start_time = std::chrono::steady_clock::now();
     while (robot_mode_ != target_mode)
@@ -526,7 +526,7 @@ bool AuboHardwareInterface::waitForRobotModeChangeTo(RobotModeType target_mode, 
     return true;
 }
 
-bool AuboHardwareInterface::waitForRobotModeChangeFrom(RobotModeType source_mode, double time_out_s = 1.0)
+bool AuboHardwareInterface::waitForRobotModeChangeFrom(RobotModeType source_mode, double time_out_s)
 {
     auto start_time = std::chrono::steady_clock::now();
     while (robot_mode_ == source_mode)
