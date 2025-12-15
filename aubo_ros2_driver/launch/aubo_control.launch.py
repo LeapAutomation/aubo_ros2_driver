@@ -92,6 +92,14 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "real_hardware_sim_mode",
+            default_value="false",
+            description="Enable sim mode on real hardware. \
+            Used only if 'use_fake_hardware' parameter is false.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "fake_sensor_commands",
             default_value="false",
             description="Enable fake command interfaces for sensors used for simple simulations. \
@@ -122,6 +130,7 @@ def generate_launch_description():
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     robot_ip = LaunchConfiguration("robot_ip")
     aubo_type = LaunchConfiguration("aubo_type")
+    real_hardware_sim_mode = LaunchConfiguration("real_hardware_sim_mode")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
 
@@ -148,7 +157,8 @@ def generate_launch_description():
             "aubo_type:=",
             aubo_type,
             " ",
-           
+            "sim_mode:=", real_hardware_sim_mode,
+            " ",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
