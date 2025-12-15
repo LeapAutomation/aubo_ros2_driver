@@ -256,7 +256,7 @@ void AuboHardwareInterface::readActualQ()
 }
 // 设置rtde输入
 
-bool enableRobot(bool enable, double time_out_s = 1.0)
+bool AuboHardwareInterface::enableRobot(bool enable, double time_out_s)
 {
     if (enable)
     {
@@ -264,7 +264,7 @@ bool enableRobot(bool enable, double time_out_s = 1.0)
         {
             if (rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->poweron() != 0)
             {
-                RCLCPP_ERROR(get_logger(), "Could not power on the robot");
+                RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Could not power on the robot");
                 return false;
             }
             // wait for robot to change mode
@@ -276,7 +276,7 @@ bool enableRobot(bool enable, double time_out_s = 1.0)
         }
         if (robot_mode_ == RobotModeType::PowerOn)
         {
-            RCLCPP_INFO(get_logger(), "Waiting for robot to read initial state");
+            RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Waiting for robot to read initial state");
             auto start_time = std::chrono::steady_clock::now();
             if (!waitForRobotModeChangeTo(RobotModeType::Idle, time_out_s))
             {
@@ -287,7 +287,7 @@ bool enableRobot(bool enable, double time_out_s = 1.0)
         {
             if (rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->startup() != 0)
             {
-                RCLCPP_ERROR(get_logger(), "Could not startup the robot");
+                RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Could not startup the robot");
                 return false;
             }
             // wait for robot to change mode
@@ -298,7 +298,7 @@ bool enableRobot(bool enable, double time_out_s = 1.0)
         }
         if (robot_mode_ == RobotModeType::BrakeReleasing)
         {
-            RCLCPP_INFO(get_logger(), "Waiting for robot to start up");
+            RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Waiting for robot to start up");
             if (!waitForRobotModeChangeTo(RobotModeType::Running, time_out_s))
             {
                 return false;
@@ -313,10 +313,10 @@ bool enableRobot(bool enable, double time_out_s = 1.0)
             || robot_mode_ == RobotModeType::Running)
         {
             auto current_mode = robot_mode_;
-            RCLCPP_INFO(get_logger(), "Disabling robot...");
+            RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Disabling robot...");
             if (rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->	poweroff() != 0)
             {
-                RCLCPP_ERROR(get_logger(), "Could not shutdown the robot");
+                RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Could not shutdown the robot");
                 return false;
             }
             // wait for robot to change mode
@@ -327,7 +327,7 @@ bool enableRobot(bool enable, double time_out_s = 1.0)
         }
         if (robot_mode_ == RobotModeType::PowerOffing)
         {
-            RCLCPP_INFO(get_logger(), "Waiting for robot to shutdown");
+            RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Waiting for robot to shutdown");
             auto start_time = std::chrono::steady_clock::now();
             if (!waitForRobotModeChangeTo(RobotModeType::PowerOff, time_out_s))
             {
@@ -339,15 +339,15 @@ bool enableRobot(bool enable, double time_out_s = 1.0)
     }
 }
 
-bool resetErrors(double time_out_s = 1.0)
+bool AuboHardwareInterface::resetErrors(double time_out_s)
 {
-    RCLCPP_INFO(get_logger(), "Resetting robot errors...");
+    RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"), "Resetting robot errors...");
     if (safety_mode_ != SafetyModeType::Normal && safety_mode_ != SafetyModeType::ReducedMode)
     {
         auto current_mode = safety_mode_;
         if (rpc_client_->getRobotInterface(robot_name_)->getRobotManage()->setUnlockProtectiveStop() != 0)
         {
-            RCLCPP_ERROR(get_logger(), "Could not reset robot protective stop");
+            RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Could not reset robot protective stop");
             return false;
         }
         // wait for robot to change mode
@@ -357,7 +357,7 @@ bool resetErrors(double time_out_s = 1.0)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             if (std::chrono::steady_clock::now() - start_time > std::chrono::duration<double>(time_out_s))
             {
-                RCLCPP_ERROR(get_logger(), "Timeout waiting for robot to reset protective stop");
+                RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Timeout waiting for robot to reset protective stop");
                 return false;
             }
         }
@@ -519,7 +519,7 @@ bool AuboHardwareInterface::waitForRobotModeChangeTo(RobotModeType target_mode, 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         if (std::chrono::steady_clock::now() - start_time > std::chrono::duration<double>(time_out_s))
         {
-            RCLCPP_ERROR(get_logger(), "Timeout waiting for robot to change mode");
+            RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Timeout waiting for robot to change mode");
             return false;
         }
     }
@@ -534,7 +534,7 @@ bool AuboHardwareInterface::waitForRobotModeChangeFrom(RobotModeType source_mode
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         if (std::chrono::steady_clock::now() - start_time > std::chrono::duration<double>(time_out_s))
         {
-            RCLCPP_ERROR(get_logger(), "Timeout waiting for robot to change mode");
+            RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Timeout waiting for robot to change mode");
             return false;
         }
     }
