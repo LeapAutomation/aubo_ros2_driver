@@ -47,6 +47,10 @@ public:
         const rclcpp_lifecycle::State &previous_state);
     hardware_interface::CallbackReturn on_init(
         const hardware_interface::HardwareInfo &system_info) final;
+    hardware_interface::CallbackReturn on_shutdown(
+        const rclcpp_lifecycle::State &previous_state);
+    hardware_interface::CallbackReturn on_error(
+        const rclcpp_lifecycle::State &previous_state);
     std::vector<hardware_interface::StateInterface> export_state_interfaces()
         final;
 
@@ -61,6 +65,10 @@ public:
     void readActualQ();
 
     void setInput(RtdeClientPtr cli);
+
+    bool enableRobot(bool enable, double time_out_s = 1.0);
+
+    bool resetErrors(double time_out_s = 1.0);
 
     bool isServoModeStart();
 
@@ -120,6 +128,9 @@ private:
     RobotModeType robot_mode_ = RobotModeType::NoController;
     SafetyModeType safety_mode_ = SafetyModeType::Normal;
     RuntimeState runtime_state_ = RuntimeState::Stopped;
+
+    bool waitForRobotModeChangeTo(RobotModeType target_mode, double time_out_s = 1.0);
+    bool waitForRobotModeChangeFrom(RobotModeType source_mode, double time_out_s = 1.0);
 };
 } // namespace aubo_driver
 
