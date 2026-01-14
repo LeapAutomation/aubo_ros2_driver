@@ -18,12 +18,12 @@ set(ENV{CPM_SOURCE_CACHE} $ENV{HOME}/.cache/CPM)
 		if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
 			# 使用 ARM64 版本 SDK 的 URL
       message("${PROJECT_NAME}: current system processor type: selecting 'aarch64'.")
-			set(SDK_URL "https://download.aubo-robotics.cn/sdk/aubo_sdk-0.26.0-rc.2-Linux_aarch64+7fe079f.zip")
+			set(SDK_URL "https://download.aubo-robotics.cn/sdk/aubo_sdk-0.26.0-rc.3-Linux_aarch64+589233b.zip")
 		else()
 			# 使用 x86_64 版本 SDK 的 URL
       message("${PROJECT_NAME}: current system processor type: selecting 'x86'.")
 			# set(SDK_URL "https://download.aubo-robotics.cn/sdk/aubo_sdk-0.22.1-Linux_x86_64+2ed0c14.zip")
-			set(SDK_URL "https://download.aubo-robotics.cn/sdk/aubo_sdk-0.26.0-rc.2-Linux_x86_64+7fe079f.zip")
+			set(SDK_URL "https://download.aubo-robotics.cn/sdk/aubo_sdk-0.26.0-rc.3-Linux_x86_64+589233b.zip")
 		endif()
 		
         FetchContent_Declare(
