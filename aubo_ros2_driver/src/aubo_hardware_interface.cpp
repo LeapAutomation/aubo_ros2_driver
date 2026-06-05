@@ -3,7 +3,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include <ctime>
-#include <sys/types.h>
 namespace aubo_driver {
 
 AuboHardwareInterface::~AuboHardwareInterface()
