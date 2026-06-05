@@ -65,7 +65,7 @@ bool AuboHardwareInterface::OnActive()
     robot_config
     ->setPayload(payload, {0,0,0}, {0,0,0}, {0,0,0,0,0,0,0,0,0});
 
-    //Disalbe collision detection
+    // Disable collision detection
     robot_config
     ->setCollisionLevel(0);
 
