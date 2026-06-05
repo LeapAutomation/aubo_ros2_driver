@@ -64,7 +64,7 @@ bool AuboHardwareInterface::OnActive()
 
     // TODO(): allow cog and inertia to be set from parameters
     robot_config
-    ->setpayload(payload, {0,0,0}, {0,0,0}, {0,0,0,0,0,0,0,0,0});
+    ->setPayload(payload, {0,0,0}, {0,0,0}, {0,0,0,0,0,0,0,0,0});
 
     //Disalbe collision detection
     robot_config
