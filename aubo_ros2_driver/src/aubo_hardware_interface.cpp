@@ -13,6 +13,22 @@ AuboHardwareInterface::~AuboHardwareInterface()
 bool AuboHardwareInterface::OnActive()
 {
     const std::string robot_ip_ = info_.hardware_parameters["robot_ip"];
+    auto payload_str = info_.hardware_parameters["payload"];
+    double payload;
+    try {
+        payload = std::stod(payload_str);
+    }
+    catch (const std::exception &e) {
+        RCLCPP_WARN(rclcpp::get_logger("AuboHardwareInterface"), "Invalid payload value: %s, setting to 0.0", payload_str.c_str());
+        payload = 0.0;
+    }
+
+    if (payload < 0 || payload > 10)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"), "Payload value out of range (0-10): %f, clamping to valid range", payload);
+        payload = std::max(0.0, std::min(payload, 10.0));
+    }
+
     rpc_client_ = std::make_shared<RpcClient>();
 
     rpc_client_->setRequestTimeout(1000);
@@ -39,11 +55,19 @@ bool AuboHardwareInterface::OnActive()
     });
     robot_name_ = rpc_client_->getRobotNames().front();
 
-    rpc_client_->getRobotInterface(robot_name_)
-    ->getRobotConfig()
+    auto robot_config = rpc_client_->getRobotInterface(robot_name_)->getRobotConfig();
+    robot_config
     ->setHardwareCustomParameters("[joint_func] \n vff_enable = false\n");
 
     std::cout << "vff_enable = false" << std::endl;
+
+    // TODO(): allow cog and inertia to be set from parameters
+    robot_config
+    ->setPayload(payload, {0,0,0}, {0,0,0}, {0,0,0,0,0,0,0,0,0});
+
+    // Disable collision detection
+    robot_config
+    ->setCollisionLevel(0);
 
     // 设置rtde输入
     setInput(rtde_client_);
@@ -211,7 +235,7 @@ hardware_interface::return_type AuboHardwareInterface::read(
 hardware_interface::return_type AuboHardwareInterface::write(
     const rclcpp::Time &time, const rclcpp::Duration &period)
 {
-    if (robot_mode_ == RobotModeType::Running && (safety_mode_ == 
+    if (robot_mode_ == RobotModeType::Running && (safety_mode_ ==
         SafetyModeType::Normal || safety_mode_ == SafetyModeType::ReducedMode)) {
         try {
             Servoj(aubo_position_commands_);
@@ -459,11 +483,11 @@ int AuboHardwareInterface::Servoj(
     for (size_t i = 0; i < traj.size(); i++) {
         traj[i] = joint_position_command[i];
     }
-    
+
     if(rpc_client_->getRobotInterface(robot_name)
                 ->getMotionControl()
                 ->getServoModeSelect() != 2){
-                
+
         rpc_client_->getRobotInterface(robot_name)
         ->getMotionControl()
         ->setServoModeSelect(2);
