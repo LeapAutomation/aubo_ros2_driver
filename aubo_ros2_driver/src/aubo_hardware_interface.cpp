@@ -127,23 +127,20 @@ hardware_interface::CallbackReturn AuboHardwareInterface::on_error(
 {
     RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"),
                 "Error occurred ...please wait...");
-    if (!resetErrors(5.0))
+
+    // Try to reset errors until successful or ROS is shutdown
+    // This is necessary because if on_error fails, the node cannot be recovered and will need to be restarted.
+    while (rclcpp::ok())
     {
-        RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
-                     "Failed to reset errors on the robot.");
-        return hardware_interface::CallbackReturn::ERROR;
+        if (!resetErrors(5.0))
+        {
+            RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
+                         "Failed to reset errors on the robot.");
+            continue;
+        }
+        break;
     }
-    if (!enableRobot(true, 20.0))
-    {
-        RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
-                     "Failed to enable the robot after error reset.");
-        return hardware_interface::CallbackReturn::ERROR;
-    }
-    if (startServoMode() != 0) {
-        RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
-                     "Failed to start servo mode after error reset.");
-        return hardware_interface::CallbackReturn::ERROR;
-    }
+
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -211,7 +208,7 @@ hardware_interface::return_type AuboHardwareInterface::read(
 hardware_interface::return_type AuboHardwareInterface::write(
     const rclcpp::Time &time, const rclcpp::Duration &period)
 {
-    if (robot_mode_ == RobotModeType::Running && (safety_mode_ == 
+    if (robot_mode_ == RobotModeType::Running && (safety_mode_ ==
         SafetyModeType::Normal || safety_mode_ == SafetyModeType::ReducedMode)) {
         try {
             Servoj(aubo_position_commands_);
@@ -459,11 +456,11 @@ int AuboHardwareInterface::Servoj(
     for (size_t i = 0; i < traj.size(); i++) {
         traj[i] = joint_position_command[i];
     }
-    
+
     if(rpc_client_->getRobotInterface(robot_name)
                 ->getMotionControl()
                 ->getServoModeSelect() != 2){
-                
+
         rpc_client_->getRobotInterface(robot_name)
         ->getMotionControl()
         ->setServoModeSelect(2);
