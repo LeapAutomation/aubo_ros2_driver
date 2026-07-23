@@ -128,19 +128,14 @@ hardware_interface::CallbackReturn AuboHardwareInterface::on_error(
     RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"),
                 "Error occurred ...please wait...");
 
-    // Try to reset errors until successful or ROS is shutdown
-    // This is necessary because if on_error fails, the node cannot be recovered and will need to be restarted.
-    while (rclcpp::ok())
+    // Try to reset errors
+    if (!resetErrors(5.0))
     {
-        if (!resetErrors(5.0))
-        {
-            RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
-                         "Failed to reset errors on the robot.");
-            continue;
-        }
-        break;
+        RCLCPP_WARN(rclcpp::get_logger("AuboHardwareInterface"),
+                        "Failed to reset errors on the robot.");
     }
 
+    // This must return SUCCESS to allow the node to recover
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
