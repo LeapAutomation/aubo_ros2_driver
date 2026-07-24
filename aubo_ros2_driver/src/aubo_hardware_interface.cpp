@@ -151,23 +151,15 @@ hardware_interface::CallbackReturn AuboHardwareInterface::on_error(
 {
     RCLCPP_INFO(rclcpp::get_logger("AuboHardwareInterface"),
                 "Error occurred ...please wait...");
+
+    // Try to reset errors
     if (!resetErrors(5.0))
     {
-        RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
-                     "Failed to reset errors on the robot.");
-        return hardware_interface::CallbackReturn::ERROR;
+        RCLCPP_WARN(rclcpp::get_logger("AuboHardwareInterface"),
+                        "Failed to reset errors on the robot.");
     }
-    if (!enableRobot(true, 20.0))
-    {
-        RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
-                     "Failed to enable the robot after error reset.");
-        return hardware_interface::CallbackReturn::ERROR;
-    }
-    if (startServoMode() != 0) {
-        RCLCPP_ERROR(rclcpp::get_logger("AuboHardwareInterface"),
-                     "Failed to start servo mode after error reset.");
-        return hardware_interface::CallbackReturn::ERROR;
-    }
+
+    // This must return SUCCESS to allow the node to recover
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
